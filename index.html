@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>PetFairy ✨ — Trade Checker</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#fff0f6; --bg2:#ffe6f2;
+  --accent1:#ff9ac9; --accent2:#ff6fb0; --muted:#6b7280;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:'Poppins',sans-serif;
+  color:#062235;
+  background: linear-gradient(180deg,var(--bg1),var(--bg2));
+  overflow-x:hidden;
+  background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQLe2NQZTUfLouSGZNYFeD5CxZGaAhqLDSGu6nDcH1sqw&s=10');
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center top;
+}
+
+/* floating emojis */
+.floating {position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.12;font-size:44px;text-align:center;animation:floatUp 30s linear infinite}
+@keyframes floatUp{0%{transform:translateY(80px)}50%{transform:translateY(-40px)}100%{transform:translateY(-300px)}}
+
+/* layout */
+.container{max-width:1100px;margin:18px auto;padding:12px;z-index:5;position:relative}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.logo{font-weight:900;font-size:26px;color:#ff4aa7;text-shadow:0 6px 18px rgba(255,111,176,0.15)}
+.subtitle{color:rgba(6,34,53,0.6);font-size:13px}
+
+/* trade card */
+.trade-card{background: rgba(255,255,255,0.94); border-radius:20px; padding:16px; box-shadow:0 18px 50px rgba(11,24,40,0.10);}
+
+/* top values bar (elvebredd style) */
+.top-values{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:36px;background:linear-gradient(0deg, #fff6f4, #fffaf8);box-shadow:inset 0 -2px 0 rgba(0,0,0,0.03);margin-bottom:14px}
+.big-num{font-size:36px;font-weight:800;color:#4a4a4a;width:96px;text-align:center}
+.center-values{text-align:center;flex:1}
+.center-values .label{font-weight:800;color:#6b7280;letter-spacing:1px}
+.progress-wrap{height:10px;background:#fff;border-radius:10px;margin-top:8px;box-shadow:inset 0 2px 0 rgba(0,0,0,0.02)}
+.progress-bar{height:100%;border-radius:10px;background:linear-gradient(90deg,#ff8a65,#ff6fb5);width:40%}
+
+/* grid: 4x3 visible slots (matches user's image) */
+.grid-wrap{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.side{width:420px}
+.side h3{margin:6px 0 8px;color:#ff4aa7;font-weight:800}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:6px;min-height:240px}
+.slot{background:linear-gradient(180deg,#fff,#fff);border-radius:12px;min-height:92px;display:flex;align-items:center;justify-content:center;border:6px solid rgba(255,182,206,0.6);position:relative;overflow:hidden;padding:6px}
+.slot.empty{background:linear-gradient(180deg,rgba(255,255,255,0.94),rgba(255,250,250,0.98));border-style:solid;opacity:1}
+.plus{font-size:34px;color:#fff;background:linear-gradient(180deg,#ff7aa7,#ff4d9b);padding:10px;border-radius:10px;box-shadow:0 8px 18px rgba(255,111,176,0.18)}
+.pet-thumb{display:flex;flex-direction:column;align-items:center;gap:6px}
+.pet-thumb img{width:72px;height:72px;object-fit:contain;border-radius:10px}
+.pet-name{font-weight:700;font-size:13px;color:#333}
+
+/* center area */
+.center-column{display:flex;flex-direction:column;align-items:center;gap:12px;justify-content:center;padding:10px}
+.trade-circle{width:88px;height:88px;border-radius:999px;background:linear-gradient(90deg,#ffd6e9,#ffb3da);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;box-shadow:0 10px 30px rgba(255,111,176,0.12)}
+.result-small{font-size:14px;color:var(--muted);margin-top:6px}
+
+/* modal selector styled like elvebredd */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(2,6,23,0.45),rgba(2,6,23,0.45));z-index:120;padding:18px}
+.modal.show{display:flex}
+.modal-card{background:linear-gradient(180deg,#fbf7f4,#f7f3f0);border-radius:18px;padding:14px;width:100%;max-width:820px;max-height:86vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,0.18)}
+
+/* selector internal */
+.selector-head{display:flex;justify-content:space-between;align-items:center}
+.search-row{display:flex;gap:8px;align-items:center;margin-top:12px}
+.search-input{flex:1;padding:10px;border-radius:16px;border:1px solid rgba(6,34,53,0.06);background:white}
+.pet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.pet-card{background:white;border-radius:12px;padding:10px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,0.04);cursor:pointer}
+.pet-card img{width:86px;height:86px;object-fit:contain;border-radius:10px}
+.bottom-attr{display:flex;gap:10px;justify-content:center;margin-top:12px}
+.attr-btn{padding:10px 14px;border-radius:24px;background:#fff;border:1px solid rgba(6,34,53,0.06);cursor:pointer;min-width:46px}
+.attr-btn.active{background:linear-gradient(90deg,var(--accent1),var(--accent2));color:white;border:none;box-shadow:0 8px 20px rgba(155,92,255,0.12)}
+
+.small{font-size:13px;color:var(--muted)}
+
+/* responsiveness */
+@media(max-width:980px){
+  .grid-wrap{flex-direction:column;align-items:center}
+  .side{width:92%}
+  .pet-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+  <div class="floating">💖 🦋 🐾 ✨ 🧚‍♀️</div>
+  <div class="container">
+    <div class="header">
+      <div>
+        <div class="logo">PetFairy ✨</div>
+        <div class="subtitle">Cute • Fair • Inspired by community values</div>
+      </div>
+      <div class="subtitle">Trade Checker</div>
+    </div>
+
+    <div class="trade-card" role="application" aria-label="PetFairy trade box">
+      <div class="top-values">
+        <div class="big-num" id="leftBig">0</div>
+        <div class="center-values">
+          <div class="label">YOUR OFFER <span style="opacity:0.6">/</span> THEIR OFFER</div>
+          <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+        </div>
+        <div class="big-num" id="rightBig">0</div>
+      </div>
+
+      <div class="grid-wrap">
+        <div class="side">
+          <h3>YOUR OFFER</h3>
+          <div id="youSlots" class="slots"></div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn" onclick="openSelector('you')">+ Add pet</button>
+            <button class="btn ghost" onclick="clearSlots('you')">Clear</button>
+          </div>
+        </div>
+
+        <div class="center-column">
+          <div class="trade-circle">TRADE</div>
+          <div class="result-small" id="resultText">Add pets to start</div>
+        </div>
+
+        <div class="side">
+          <h3>THEIR OFFER</h3>
+          <div id="themSlots" class="slots"></div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button class="btn" onclick="openSelector('them')">+ Add pet</button>
+            <button class="btn ghost" onclick="clearSlots('them')">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:12px">
+        <input id="globalSearch" class="search" placeholder="Search pet name...">
+        <select id="globalRarity" class="select">
+          <option value="all">All rarities</option>
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+          <option value="ultra-rare">Ultra Rare</option>
+          <option value="legendary">Legendary</option>
+          <option value="exotic">Exotic</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- selector modal -->
+  <div id="selector" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="selector-head">
+        <h3>Select pets</h3>
+        <div><button id="closeSel" class="btn ghost">Close</button></div>
+      </div>
+      <div class="search-row">
+        <input id="modalSearch" class="search-input" placeholder="Search">
+        <button id="searchBtn" class="btn ghost">🔍</button>
+      </div>
+
+      <div id="petGrid" class="pet-grid"></div>
+
+      <div class="bottom-attr">
+        <div class="attr-btn" data-attr="fly">F</div>
+        <div class="attr-btn" data-attr="ride">R</div>
+        <div class="attr-btn active" data-attr="default">D</div>
+        <div class="attr-btn" data-attr="neon">N</div>
+        <div class="attr-btn" data-attr="mega">M</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* Final PetFairy single-file (Wikia images) */
+/* initial settings */
+const SETTINGS = { neonMult:2, megaMult:4, flyAdd:1, rideAdd:1, maxSlots:18 };
+
+/* High-tier pets (Wikia image URLs) */
+const PETS = [
+  {name:"Bat Dragon", rarity:"exotic", value:1200, img:"https://static.wikia.nocookie.net/adoptme/images/7/7d/Bat_Dragon.png"},
+  {name:"Shadow Dragon", rarity:"exotic", value:1100, img:"https://static.wikia.nocookie.net/adoptme/images/7/76/Shadow_Dragon.png"},
+  {name:"Frost Dragon", rarity:"legendary", value:900, img:"https://static.wikia.nocookie.net/adoptme/images/2/24/Frost_Dragon.png"},
+  {name:"Giraffe", rarity:"legendary", value:750, img:"https://static.wikia.nocookie.net/adoptme/images/5/5f/Giraffe.png"},
+  {name:"Owl", rarity:"legendary", value:420, img:"https://static.wikia.nocookie.net/adoptme/images/8/8f/Owl.png"},
+  {name:"Parrot", rarity:"rare", value:150, img:"https://static.wikia.nocookie.net/adoptme/images/7/76/Parrot.png"},
+  {name:"Unicorn", rarity:"legendary", value:280, img:"https://static.wikia.nocookie.net/adoptme/images/3/34/Unicorn.png"},
+  {name:"Penguin", rarity:"rare", value:60, img:"https://static.wikia.nocookie.net/adoptme/images/a/a6/Penguin.png"},
+  {name:"Neon Dog", rarity:"legendary", value:320, img:"https://static.wikia.nocookie.net/adoptme/images/6/6a/Dog.png"},
+  {name:"Mega Cat", rarity:"legendary", value:480, img:"https://via.placeholder.com/120?text=Mega+Cat"}
+];
+
+/* DOM refs */
+const youSlots = document.getElementById('youSlots');
+const themSlots = document.getElementById('themSlots');
+const petGrid = document.getElementById('petGrid');
+const selector = document.getElementById('selector');
+const modalSearch = document.getElementById('modalSearch');
+const resultText = document.getElementById('resultText');
+const leftBig = document.getElementById('leftBig');
+const rightBig = document.getElementById('rightBig');
+const progressBar = document.getElementById('progressBar');
+
+let activeSide = null;
+let activeSlot = null;
+let defaultAttrs = {fly:false, ride:false, neon:false, mega:false, default:true};
+
+/* create initial 12 slots per side (4x3) */
+function createSlotsFor(container){
+  container.innerHTML = '';
+  for(let i=0;i<12;i++) container.appendChild(createSlot());
+}
+function createSlot(){
+  const s = document.createElement('div');
+  s.className = 'slot empty';
+  s.innerHTML = '<div class="plus">+</div>';
+  s.addEventListener('click', ()=> openSelectorFor(s));
+  return s;
+}
+createSlotsFor(youSlots);
+createSlotsFor(themSlots);
+
+/* ensure capacity: if user adds more than 12, expand to 18 */
+function ensureCapacity(container){
+  const current = container.children.length;
+  if(current >= SETTINGS.maxSlots) return;
+  if(current < 18){
+    // add remaining slots up to 18
+    const toAdd = Math.min(18 - current, 6);
+    for(let i=0;i<toAdd;i++) container.appendChild(createSlot());
+  }
+}
+
+/* selector open/close */
+function openSelectorFor(slot){
+  activeSlot = slot;
+  activeSide = (slot.parentElement === youSlots) ? 'you' : 'them';
+  showSelector();
+}
+function openSelector(side){ activeSide = side; showSelector(); }
+function showSelector(){ selector.classList.add('show'); selector.style.display='flex'; modalSearch.value=''; buildPetGrid(); }
+document.getElementById('closeSel').addEventListener('click', closeSelector);
+function closeSelector(){ selector.classList.remove('show'); selector.style.display='none'; activeSlot=null; activeSide=null; }
+
+/* build pet grid (only Pets category, Wikia URLs) */
+function buildPetGrid(){
+  petGrid.innerHTML='';
+  const q = (modalSearch.value||'').toLowerCase();
+  const list = PETS.filter(p=> p.name.toLowerCase().includes(q)).sort((a,b)=> b.value - a.value);
+  list.forEach(p=>{
+    const el = document.createElement('div'); el.className='pet-card';
+    el.innerHTML = `<img src="${p.img}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/120?text=No+Img'"><div style="margin-top:6px;font-weight:700">${p.name}</div><div class="small">${p.rarity} • ${p.value}</div>`;
+    el.addEventListener('click', ()=> choosePet(p));
+    petGrid.appendChild(el);
+  });
+}
+
+/* bottom attr buttons behaviour (F/R/D/N/M) */
+document.querySelectorAll('.attr-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const a = b.dataset.attr;
+    if(a === 'default'){
+      defaultAttrs = {fly:false,ride:false,neon:false,mega:false,default:true};
+      document.querySelectorAll('.attr-btn').forEach(x=> x.classList.remove('active'));
+      b.classList.add('active');
+    } else {
+      defaultAttrs.default = false;
+      b.classList.toggle('active');
+      defaultAttrs.fly = !!document.querySelector('.attr-btn[data-attr="fly"].active');
+      defaultAttrs.ride = !!document.querySelector('.attr-btn[data-attr="ride"].active');
+      defaultAttrs.neon = !!document.querySelector('.attr-btn[data-attr="neon"].active');
+      defaultAttrs.mega = !!document.querySelector('.attr-btn[data-attr="mega"].active');
+      if(defaultAttrs.fly||defaultAttrs.ride||defaultAttrs.neon||defaultAttrs.mega){
+        document.querySelectorAll('.attr-btn[data-attr="default"]').forEach(x=> x.classList.remove('active'));
+      }
+    }
+  });
+});
+
+/* choose pet - apply defaultAttrs automatically */
+function choosePet(pet){
+  const attrs = [];
+  if(defaultAttrs.fly) attrs.push('fly');
+  if(defaultAttrs.ride) attrs.push('ride');
+  if(defaultAttrs.neon) attrs.push('neon');
+  if(defaultAttrs.mega) attrs.push('mega');
+  placePet(pet, attrs);
+  closeSelector();
+}
+
+/* place pet into first empty slot */
+function placePet(pet, attrs){
+  const container = (activeSide === 'them') ? themSlots : youSlots;
+  ensureCapacity(container);
+  const empty = Array.from(container.children).find(c=> c.classList.contains('empty'));
+  if(!empty){ alert('No empty slots. Clear one first.'); return; }
+  empty.classList.remove('empty');
+  empty.innerHTML = `<div class="pet-thumb">
+    <img src="${pet.img}" alt="${pet.name}" onerror="this.src='https://via.placeholder.com/120?text=No+Img'">
+    <div class="pet-name">${pet.name}</div>
+    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn ghost attr" data-attr="fly">F</button>
+      <button class="btn ghost attr" data-attr="ride">R</button>
+      <button class="btn ghost attr" data-attr="neon">N</button>
+      <button class="btn ghost attr" data-attr="mega">M</button>
+    </div>
+    <button class="btn ghost remove" style="margin-top:8px">Remove</button>
+  </div>`;
+  empty.dataset.pet = pet.name;
+  empty.dataset.base = pet.value;
+  empty.querySelectorAll('.attr').forEach(b=>{
+    const a = b.dataset.attr;
+    if(attrs.includes(a)) b.classList.add('active');
+    b.addEventListener('click', function(e){ e.stopPropagation(); this.classList.toggle('active'); updateTotals(); });
+  });
+  empty.querySelector('.remove').addEventListener('click', function(e){ e.stopPropagation(); clearSlot(empty); updateTotals(); });
+  updateTotals();
+}
+
+/* clear functions */
+function clearSlot(slot){ slot.classList.add('empty'); slot.innerHTML = '<div class="plus">+</div>'; delete slot.dataset.pet; delete slot.dataset.base; }
+function clearSlots(side){ const cont = (side==='them')? themSlots : youSlots; Array.from(cont.children).forEach(c=> clearSlot(c)); updateTotals(); }
+
+/* compute values with additive then multipliers */
+function computeSlot(slot){
+  if(!slot.dataset.pet) return 0;
+  const base = parseFloat(slot.dataset.base) || 0;
+  let add = 0; let mult = 1;
+  slot.querySelectorAll('.attr.active').forEach(b=>{
+    const a = b.dataset.attr;
+    if(a==='fly') add += SETTINGS.flyAdd;
+    if(a==='ride') add += SETTINGS.rideAdd;
+    if(a==='neon') mult *= SETTINGS.neonMult;
+    if(a==='mega') mult *= SETTINGS.megaMult;
+  });
+  return Math.round((base + add) * mult * 100) / 100;
+}
+
+function getTotal(container){ return Array.from(container.children).reduce((s,slot)=> s + computeSlot(slot), 0); }
+
+function updateTotals(){
+  const you = Math.round(getTotal(youSlots) * 100) / 100;
+  const them = Math.round(getTotal(themSlots) * 100) / 100;
+  leftBig.textContent = you;
+  rightBig.textContent = them;
+  const total = (you + them) || 1;
+  const pct = Math.max(0, Math.min(100, Math.round((you/total)*100)));
+  progressBar.style.width = pct + '%';
+  if(you === 0 && them === 0){ resultText.textContent = 'Add pets to start'; resultText.style.color = '#062235'; return; }
+  if(them > you * 1.2){ resultText.textContent = '🔥 Win — trade looks winning'; resultText.style.color = 'var(--success)'; }
+  else if(you > them * 1.2){ resultText.textContent = '😢 Lose — disadvantageous'; resultText.style.color = 'var(--danger)'; }
+  else { resultText.textContent = '⚖️ Fair — balanced'; resultText.style.color = 'var(--warn)'; }
+}
+
+/* UI wiring */
+document.getElementById('closeSel').addEventListener('click', closeSelector);
+modalSearch.addEventListener('input', buildPetGrid);
+document.getElementById('globalSearch').addEventListener('input', ()=>{ modalSearch.value = document.getElementById('globalSearch').value; buildPetGrid(); });
+
+/* initial build */
+buildPetGrid();
+updateTotals();
+
+</script>
+</body>
+</html>
